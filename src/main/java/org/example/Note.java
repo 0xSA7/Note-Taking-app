@@ -1,5 +1,12 @@
 package org.example;
 
 public class Note {
-//    private user
+    private FileManager fileManager ;
+    public Note(){
+        this.fileManager = new FileManager();
+    }
+
+    public void createNewNote(String noteName){
+
+    }
 }

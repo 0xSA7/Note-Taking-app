@@ -52,7 +52,7 @@ public class FileManager {
         File newUser = new File("Users",name) ;
         newUser.mkdirs() ;
     }
-    public boolean checkNameAndPasswordValidation(String username , String password){
+    public static boolean checkNameAndPasswordValidation(String username , String password){
         // First checking if the username is valid or not
         if (username == null || username.trim().isEmpty()) {
             System.out.println("Username cannot be empty");
@@ -89,6 +89,10 @@ public class FileManager {
             System.out.println("Wrong username");
             return false ;
         }
+    }
+
+    public void createNewNote(String name){
+
     }
 
 }
