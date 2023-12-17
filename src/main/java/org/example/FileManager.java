@@ -8,12 +8,15 @@ import java.util.HashMap;
 
 public class FileManager {
     private final File UsersDir = new File("Users") ;
-    private HashMap<String, String> users ;
+    private static HashMap<String, String> users ;
+    private static HashMap<String , User> allUsers ;
+    private static HashMap<Note, String> securedNotes ;
     public FileManager(){
-        Users() ;
+        loadUsers() ;
+        loadSecuredNotesFile();
     }
-    private  void Users(){
-        File file  = new File("IDandPass.txt") ;
+    private  static void loadUsers(){
+        File file  = new File("IDandPass.ser") ;
         try{
             if(file.length() == 0){
                 ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(file)) ;
@@ -34,26 +37,51 @@ public class FileManager {
             throw new RuntimeException(e);
         }
     }
-    private HashMap<String , String> getUsers(){
-        return this.users ;
+    private static void loadSecuredNotesFile(){
+        File file = new File("secured_notes.ser") ;
+        try{
+            if(file.length() == 0){
+                ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(file)) ;
+                HashMap<Note , String> temp = new HashMap<>() ;
+                oos.writeObject(temp);
+                oos.flush();
+                oos.close();
+            }
+            ObjectInputStream ois = new ObjectInputStream(new FileInputStream(file)) ;
+            securedNotes = (HashMap<Note , String>) ois.readObject() ;
+            ois.close();
+        }catch (ClassNotFoundException c){
+            c.printStackTrace();
+        } catch (FileNotFoundException e) {
+            throw new RuntimeException(e);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+
     }
-    public void createNewUser(String name , String password) throws IOException {
-        if(users.containsKey(name)){
+    private static HashMap<String , String> getUsers(){
+        return users ;
+    }
+    public static void createNewUser(User user) throws IOException {
+        if(users.containsKey(user.getName())){
             System.out.println("This username is already taken try another one");
             return ;
         }
-        if(!checkNameAndPasswordValidation(name,password)){
+        if(!checkNameAndPasswordValidation(user.getName(),user.getPassword())){
             return ;
         }
 
-        users.put(name , password) ;
-
+        users.put(user.getName() , user.getPassword()) ;
+        allUsers.put(user.getName(),user) ;
         ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream("IDandPass.txt")) ;
         oos.writeObject(users);
         oos.flush();
         oos.close();
-        File newUser = new File("Users",name) ;
+        File newUser = new File("Users",user.getName()) ;
         newUser.mkdirs() ;
+    }
+    public static User getUserByName(String name){
+        return allUsers.get(name) ;
     }
     public static boolean checkNameAndPasswordValidation(String username , String password){
         // First checking if the username is valid or not
@@ -77,7 +105,10 @@ public class FileManager {
         return true;
     }
 
-    public boolean checkUserExistance(String name , String password){
+    public static HashMap<String, User> getAllUsers(){
+        return allUsers ;
+    }
+    public static boolean checkUserExistance(String name , String password){
         if(users.containsKey(name)) {
             if(users.get(name).equals(password)) {
                 System.out.println("Welcome " + name);
@@ -94,25 +125,17 @@ public class FileManager {
         }
     }
 
-    public void createNewUnSecuredNote(User user , Note note){
-        String path = "Users" + '\\' + user.getName() + "\\" + "UnSecured_Notes\\" + note.getNoteName() ;
+
+    public static void createNewSecuredNote(User user , Note note,String password){
+        String path = "Users" + '\\' + user.getName() + "\\" + note.getNoteName() ;
+        securedNotes.put(note,password) ;
         File newNote = new File(path) ;
         newNote.mkdirs() ;
     }
 
-    public void createNewSecuredNote(User user , Note note,String password){
-        String path = "Users" + '\\' + user.getName() + "\\" + "Secured_Notes\\" + note.getNoteName() ;
-        File newNote = new File(path) ;
-        newNote.mkdirs() ;
-    }
-
-    public void createTextualNote(User user , Note note , String textFileName){
+    public static void createTextualNote(User user , Note note , String textFileName){
         String textPath ;
-        if(!note.isSecured()){
-            textPath = "Users\\" + user.getName() + "\\" +"UnSecured_Notes\\"+ note.getNoteName() + "\\" + textFileName + ".txt" ;
-        }else{
-            textPath = "Users\\" + user.getName() + "\\" +"Secured_Notes\\"+ note.getNoteName() + "\\" + textFileName + ".txt" ;
-        }
+        textPath = "Users\\" + user.getName() + "\\" + note.getNoteName() + "\\" + textFileName + ".txt" ;
         File file = new File(textPath) ;
         try{
             file.createNewFile();
@@ -121,12 +144,14 @@ public class FileManager {
         }
     }
 
-    public String readFromFile(String filePath) throws IOException {
+
+    public static String readFromFile(String filePath) throws IOException {
         byte[] fileBytes = Files.readAllBytes(Path.of(filePath));
         return new String(fileBytes);
     }
 
-    public void writeToFile(String filePath, String content) throws IOException {
+
+    public static void writeToFile(String filePath, String content) throws IOException {
         Files.write(Path.of(filePath), content.getBytes(), StandardOpenOption.CREATE, StandardOpenOption.WRITE);
     }
 
