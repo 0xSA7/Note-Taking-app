@@ -1,6 +1,9 @@
 package org.example;
 
 import java.io.*;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.StandardOpenOption;
 import java.util.HashMap;
 
 public class FileManager {
@@ -91,8 +94,40 @@ public class FileManager {
         }
     }
 
-    public void createNewNote(String name){
+    public void createNewUnSecuredNote(User user , Note note){
+        String path = "Users" + '\\' + user.getName() + "\\" + "UnSecured_Notes\\" + note.getNoteName() ;
+        File newNote = new File(path) ;
+        newNote.mkdirs() ;
+    }
 
+    public void createNewSecuredNote(User user , Note note,String password){
+        String path = "Users" + '\\' + user.getName() + "\\" + "Secured_Notes\\" + note.getNoteName() ;
+        File newNote = new File(path) ;
+        newNote.mkdirs() ;
+    }
+
+    public void createTextualNote(User user , Note note , String textFileName){
+        String textPath ;
+        if(!note.isSecured()){
+            textPath = "Users\\" + user.getName() + "\\" +"UnSecured_Notes\\"+ note.getNoteName() + "\\" + textFileName + ".txt" ;
+        }else{
+            textPath = "Users\\" + user.getName() + "\\" +"Secured_Notes\\"+ note.getNoteName() + "\\" + textFileName + ".txt" ;
+        }
+        File file = new File(textPath) ;
+        try{
+            file.createNewFile();
+        }catch (IOException e){
+            e.printStackTrace();
+        }
+    }
+
+    public String readFromFile(String filePath) throws IOException {
+        byte[] fileBytes = Files.readAllBytes(Path.of(filePath));
+        return new String(fileBytes);
+    }
+
+    public void writeToFile(String filePath, String content) throws IOException {
+        Files.write(Path.of(filePath), content.getBytes(), StandardOpenOption.CREATE, StandardOpenOption.WRITE);
     }
 
 }
